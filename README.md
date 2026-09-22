@@ -24,3 +24,31 @@
         # -!- I movimenti avverranno secondo delle unità base, es (50 mm alla volta)
 
 # 3. Operazioni finali e Rilascio connessione
+
+### Funzionamento degli handle
+    Nel contesto del protocollo b-CAP/ORiN, un handle è un identificativo numerico (una sorta di puntatore software) che rappresenta e permette di accedere a un oggetto specifico allocato all'interno della memoria del controller DENSO.
+    L'interazione con il robot avviene attraverso una gerarchia di questi identificatori: è possibile acquisire handle per il controller principale (h_ctrl), per il braccio meccanico (h_rob) e per le singole variabili interne (h_var).
+    Una volta generato un handle (ad esempio richiamando le funzioni controller_getrobot o controller_getvariable), questo numero deve essere passato come parametro alle funzioni successive per specificare su quale entità si desidera eseguire un'azione o leggere un dato.
+
+Poiché la creazione di questi oggetti assegna delle risorse nella memoria hardware del controller, ogni handle deve essere obbligatoriamente liberato al termine del suo utilizzo tramite i metodi di rilascio dedicati
+
+### MANUALE UTENTE ###
+- Movimentazione del braccio robotico tramite comando vocale.
+    La movimentazione avviene secondo delle "unità di spostamento".
+    L'unità base vale 5 cm, l'IA è addestrata anche a riconoscere porzioni decimali di unità, ad esempio 1/2, 1/4 e 3/4.
+    Se al robot vengono richieste più azioni contemporaneamente allora non prenderà in considerazione nessuna di esse
+
+    Esempi di input corretti:
+        #. Vai in avanti di poco
+        #. spostati un po' a destra
+        #. spostati molto a sinistra
+        #. spostati a sinistra di 2 unità
+        #. spostati indietro di 1/2 di unità
+        #. spostati avanti di 1/4 di unità
+        #. spostati a sinistra di 3/4 di unità
+        #. chiudi la pinza
+        #. lascia andare
+
+    Esempi input scorretti:
+        # vai in avanti di 1 unità e ruota
+        # vai indietro di molto e afferra

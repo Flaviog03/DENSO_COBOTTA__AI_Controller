@@ -10,7 +10,7 @@
       "enum": ""
     },
     "moltiplicatore": {
-       "type": "integer",
+       "type": "number",
        "description": "Indica di quante unità di base (es. 50mm) deve essere moltiplicato il comando se l'utente richiede grandi spostamenti."
     }
   },

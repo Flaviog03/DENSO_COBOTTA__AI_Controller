@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+from typing import Any
 
 class AITransformerError(Exception):
     def __init__(self, message):
@@ -18,7 +19,7 @@ class AITransformer:
         if not self.modello:
             raise AITransformerError("Errore: il modello per l'AI scelto è sbagliato")
 
-    def askAI(self, payload:str):
+    def askAI(self, payload:dict[str, Any]) -> dict[str, Any]:
         """Invia una request ad un'AI locale e ritorna il risultato in JSON"""
 
         if self.llm_url is None:
