@@ -40,12 +40,15 @@ class BrainProcessor:
                 1. Se l'utente chiede di spostarsi, usa TRANSLATE e specifica una tra le seguenti direzioni [UP, DOWN, FORWARD, BACKWARD].
                 2. Se l'utente chiede di ruotarsi, usa ROTATE e specifica una tra le seguenti direzioni [RIGHT, LEFT].
                 3. Se non viene indicata una distanza esatta, usa sempre moltiplicatore: 1. Se specificata, inserisci un numero da 1 a 5 in base all'entita' dello spostamento richiesto, eventualmente anche frazionario.
-                4. Se l'utente chiede di prendere, pinzare o afferrare, usa GRAB (senza direzione e moltiplicatore).
+                4. Se l'utente chiede di prendere, pinzare o afferrare, usa GRAB.
                 5. Se l'utente chiede di mollare, lasciare o aprire, usa RELEASE.
                 6. Se l'utente richiede più azioni contemporaneamente restituisci ERROR in tutti i campi stringa e -1 in tutti i campi number
                 7. Se l'utente chiede di uscire utilizza EXIT
                 8. Se l'utente pronuncia un comando incompleto restituisci ERROR
                 9. Se il comando utente è vuoto restituisci ERROR
+                10. Se l'utente chiede di salvare la posizione attuale usa SAVE e specifica la lettera come direzione. L'utente deve specificare una lettera per quella posizione, se manca la parola chiave SALVA o manca la LETTERA restituisci ERROR.
+                11. Se l'utente chiede di tornare alla posizione precedente usa il comando ROLLBACK come azione, NULL come direzione e -1 come moltiplicatore
+                12. Se l'utente chiede di tornare ad una posizione precedentemente salvata e specifica la lettera con cui identificarla usa il comando ROLLBACK come azione, la lettera indicata come direzione e -1 come moltiplicatore
 
                 ESEMPI DI RISPOSTA:
                 Input: vai in avanti di poco
@@ -56,6 +59,15 @@ class BrainProcessor:
 
                 Input: spostati molto a sinistra
                 Output: azione: ROTATE, direzione: LEFT, moltiplicatore: 5
+
+                Input: salva la posizione attuale come A
+                Output: azione: SAVE, direzione: A, moltiplicatore: -1
+
+                Input: salva la posizione attuale come facocero
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
+
+                Input: salva la posizione attuale come B
+                Output: azione: SAVE, direzione: B, moltiplicatore: -1
 
                 Input: spostati a sinistra di 2 unità
                 Output: azione: ROTATE, direzione: LEFT, moltiplicatore: 2
@@ -70,56 +82,61 @@ class BrainProcessor:
                 Output: azione: TRANSLATE, direzione: FORWARD, moltiplicatore: 0.75
 
                 Input: chiudi la pinza e prendi il peluche
-                Output: azione: GRAB
+                Output: azione: GRAB, direzione: NULL, moltiplicatore: -1
 
                 Input: lascia andare
-                Output: azione: RELEASE
+                Output: azione: RELEASE, direzione: NULL, moltiplicatore: -1
 
                 Input: vai in avanti di 1 unità e ruota
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando multiplo
 
                 Input: ruota in avanti
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Direzione non ammessa per ruota
                 
                 Input: ruota in alto
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Direzione non ammessa per ruota
 
                 Input: ruota a sinistra e vai avanti
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando multiplo
                 
-
                 Input: vai indietro di molto e afferra
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando multiplo
 
                 Input: vai av
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando incompleto
                 
                 Input: 
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando vuoto
                 
                 Input: ruota a si
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando incompleto
 
                 Input: tra in avanti
-                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Output: azione: ERROR, direzione: NULL, moltiplicatore: -1
                 Motivo: Comando incompleto
 
                 Input: voglio uscire
-                Output: azione: EXIT, direzione: EXIT, moltiplicatore: -1
+                Output: azione: EXIT, direzione: NULL, moltiplicatore: -1
 
                 Input: esci
-                Output: azione: EXIT, direzione: EXIT, moltiplicatore: -1
+                Output: azione: EXIT, direzione: NULL, moltiplicatore: -1
 
                 Input: termina l'esecuzione
-                Output: azione: EXIT, direzione: EXIT, moltiplicatore: -1
+                Output: azione: EXIT, direzione: NULL, moltiplicatore: -1
+
+                Input: torna alla posizione precedente
+                Output: azione: ROLLBACK, direzione: NULL, moltiplicatore: -1
+
+                Input: torna alla posizione A
+                Output: azione: ROLLBACK, direzione: A, moltiplicatore: -1
             """
 
     def process_command(self, user_text: str) -> dict[str, Any]:
