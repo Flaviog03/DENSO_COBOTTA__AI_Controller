@@ -54,4 +54,6 @@ Poiché la creazione di questi oggetti assegna delle risorse nella memoria hardw
         # vai indietro di molto e afferra
 
 ### LIMITI DEL ROBOT ###
-X = [, 300]
+X = [132, 338]
+Y = 
+Z = [-10 , 365]
