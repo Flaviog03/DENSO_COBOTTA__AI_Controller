@@ -3,6 +3,7 @@ from densoController import RobotAction, DirectionMap
 from pybcapclient.bcapclient import BCAPClient
 from densoController import DensoController, ControllerError
 from brainProcessor import BrainProcessor, BrainProcessorError
+from speech_recognition.exceptions import WaitTimeoutError
 from dotenv import load_dotenv
 import time
 import os
@@ -14,8 +15,8 @@ ROBOT_PORT = 5007
 TIMEOUT_MS = 2000
 SPEED_LIMIT = 40
 BASE_UNIT = 50          # Dimensione dell'unità base in mm
-MOCK_EAR = False
-MOCK_AI = False
+MOCK_EAR = True
+MOCK_AI = True
 MOCK_CONTROLLER = False
 
 def provaMovimenti() -> list:
@@ -61,52 +62,61 @@ if __name__ == "__main__":
 
         # 2 - Corpo principale del programma
         while comandoUtente != "Esci":
+            try:
+                    
+                # Reset comandoUtente
+                comandoUtente = ""
 
-            # Reset comandoUtente
-            comandoUtente = ""
+                # 2.0 Calcolo statistiche
+                startingTime = time.time()
 
-            # 2.0 Calcolo statistiche
-            startingTime = time.time()
+                # 2.1 Acquisizione input
+                posizioneAttuale = controller.getActualPosition()
 
-            # 2.1 Acquisizione input
-            posizioneAttuale = controller.getActualPosition()
+                if not MOCK_EAR:
+                    comandoUtente = orecchio.listen_and_transcribe()
+                    print(f"Comando audio : {comandoUtente}")
+                else:
+                    # Faccio un mock 
+                    comandoUtente = "vai indietro"
 
-            if not MOCK_EAR:
-                comandoUtente = orecchio.listen_and_transcribe()
-                print(f"Comando audio : {comandoUtente}")
-            else:
-                # Faccio un mock 
-                comandoUtente = "trasla il braccio in avanti"
+                if not MOCK_AI:
+                    risultato = cervello.process_command(comandoUtente)
 
-            if not MOCK_AI:
-                risultato = cervello.process_command(comandoUtente)
+                    azione = risultato["comando"]
+                    direzione = risultato["direzione"]
+                    moltiplicatore = risultato["moltiplicatore"]
+                else:   # Mock dell'AI (fatto per problemi di ram)
+                    listaAcquisita = provaMovimenti()
+                    azione = listaAcquisita[0]
+                    direzione = listaAcquisita[1]
+                    moltiplicatore = listaAcquisita[2]
 
-                azione = risultato["comando"]
-                direzione = risultato["direzione"]
-                moltiplicatore = risultato["moltiplicatore"]
-            else:   # Mock dell'AI (fatto per problemi di ram)
-                listaAcquisita = provaMovimenti()
-                azione = listaAcquisita[0]
-                direzione = listaAcquisita[1]
-                moltiplicatore = listaAcquisita[2]
+                print("Inizio movimentazione...")
 
-            print("Inizio movimentazione...")
+                if azione == RobotAction.ERROR.name:
+                    print("Qualcosa non è andato a buon fine, assicurati di menzionare un solo comando alla volta")
+                    continue
 
-            if azione == RobotAction.ERROR.name:
-                print("Qualcosa non è andato a buon fine, assicurati di menzionare un solo comando alla volta")
+                if azione == RobotAction.EXIT.name:
+                    print("Arrivederci...")
+                    break
+                
+                controller.execute(azione, direzione, moltiplicatore)
+
+                endingTime = time.time()
+
+                print(f"Tempo totale di esecuzione: {int(endingTime-startingTime)} secondi")
+            except ControllerError as e:
+                print(e)
                 continue
-
-            if azione == RobotAction.EXIT.name:
-                print("Arrivederci...")
-                break
-            
-            controller.execute(azione, direzione, moltiplicatore)
-
-            endingTime = time.time()
-
-            print(f"Tempo totale di esecuzione: {int(endingTime-startingTime)} secondi")
-
-    except BrainProcessorError as e:
+            except BrainProcessorError as e:
+                print(e)
+                continue
+            except WaitTimeoutError as e:
+                print(e)
+                continue
+    except Exception as e:
         print(e)
     finally:
         controller.disconnect()
@@ -117,7 +127,6 @@ IDEE:
     - Salva la posizione del robot tramite comando vocale
     - Nuova istruzione ROLLBACK
     - Gestione delle eccezioni out of range
-    - 
 """
 
      
