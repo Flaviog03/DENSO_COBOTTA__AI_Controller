@@ -43,6 +43,9 @@ class BrainProcessor:
                 4. Se l'utente chiede di prendere, pinzare o afferrare, usa GRAB (senza direzione e moltiplicatore).
                 5. Se l'utente chiede di mollare, lasciare o aprire, usa RELEASE.
                 6. Se l'utente richiede più azioni contemporaneamente restituisci ERROR in tutti i campi stringa e -1 in tutti i campi number
+                7. Se l'utente chiede di uscire utilizza EXIT
+                8. Se l'utente pronuncia un comando incompleto restituisci ERROR
+                9. Se il comando utente è vuoto restituisci ERROR
 
                 ESEMPI DI RISPOSTA:
                 Input: vai in avanti di poco
@@ -74,18 +77,49 @@ class BrainProcessor:
 
                 Input: vai in avanti di 1 unità e ruota
                 Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando multiplo
 
                 Input: ruota in avanti
                 Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
-
+                Motivo: Direzione non ammessa per ruota
+                
                 Input: ruota in alto
                 Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Direzione non ammessa per ruota
 
                 Input: ruota a sinistra e vai avanti
                 Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando multiplo
+                
 
                 Input: vai indietro di molto e afferra
                 Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando multiplo
+
+                Input: vai av
+                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando incompleto
+                
+                Input: 
+                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando vuoto
+                
+                Input: ruota a si
+                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando incompleto
+
+                Input: tra in avanti
+                Output: azione: ERROR, direzione: ERROR, moltiplicatore: -1
+                Motivo: Comando incompleto
+
+                Input: voglio uscire
+                Output: azione: EXIT, direzione: EXIT, moltiplicatore: -1
+
+                Input: esci
+                Output: azione: EXIT, direzione: EXIT, moltiplicatore: -1
+
+                Input: termina l'esecuzione
+                Output: azione: EXIT, direzione: EXIT, moltiplicatore: -1
             """
 
     def process_command(self, user_text: str) -> dict[str, Any]:

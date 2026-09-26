@@ -52,3 +52,6 @@ Poiché la creazione di questi oggetti assegna delle risorse nella memoria hardw
     Esempi input scorretti:
         # vai in avanti di 1 unità e ruota
         # vai indietro di molto e afferra
+
+### LIMITI DEL ROBOT ###
+X = [, 300]

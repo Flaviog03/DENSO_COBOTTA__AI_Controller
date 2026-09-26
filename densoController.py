@@ -1,6 +1,13 @@
 from pybcapclient.bcapclient import BCAPClient
 import time
 from enum import IntEnum, StrEnum
+import os
+from dotenv import load_dotenv
+
+class ControllerError(Exception):
+    def __init__(self, message):
+            self.message = message
+            super().__init__(self.message)
 
 class DirectionMap(StrEnum):
     """
@@ -13,18 +20,20 @@ class DirectionMap(StrEnum):
     LEFT     = "1,+1"
     UP       = "2,+1"
     DOWN     = "2,-1"
+    ERROR    = "X,-X"
 
     @classmethod
     def get_allowed_directions(cls) -> list[str]:
         """Restituisce le direzioni consentite leggendole dinamicamente dall'Enum"""
         return [direction.name for direction in cls]
     
-
 class RobotAction(IntEnum):
     TRANSLATE = 0
     ROTATE = 1
     GRAB = 2
     RELEASE = 3
+    ERROR = 4
+    EXIT = 5
 
     @classmethod
     def get_allowed_actions(cls) -> list[str]:
@@ -32,9 +41,10 @@ class RobotAction(IntEnum):
         return [action.name for action in cls]
 
 class DensoController:
-    def __init__(self, ip_address="192.168.0.1", port=5007, timeout=2000):
+    def __init__(self, ip_address="192.168.0.1", port=5007, timeout=2000, baseUnit=50):
         self.ip = ip_address
         self.port = port
+        self.baseUnit = baseUnit
 
         # Inizializza il client: l'apertura del socket avviene automaticamente qui (timeout 2000 ms)
         self.bcap = BCAPClient(self.ip, self.port, timeout) 
@@ -46,6 +56,7 @@ class DensoController:
         self.h_ctrl = None
         self.h_rob = None
         self.CurPosHandl = None
+        self.h_pinza = None
 
     def connect(self):
         # Connessione al controller virtuale o reale
@@ -59,6 +70,12 @@ class DensoController:
         # --- Handle dell'oggetto Robot ---
         self.h_rob = self.bcap.controller_getrobot(self.h_ctrl, "Arm", "")
         print("Handle Robot ottenuto:", self.h_rob)
+
+        # Dopo aver ottenuto self.h_rob...
+        self.CurPosHandl = self.bcap.robot_getvariable(self.h_rob, "@CURRENT_POSITION", "")
+
+        # --- Handle della pinza ---
+        # self.h_pinza = self.bcap.controller_getvariable(self.h_ctrl, "IO_PINZA", "")
 
         # --- Presa di controllo del braccio ---
         self.bcap.robot_execute(self.h_rob, "TakeArm", [0, 0])
@@ -77,11 +94,51 @@ class DensoController:
         self.bcap.robot_execute(self.h_rob, "ExtSpeed", [speed, acc, dec])
         print(f"Velocità impostata al {speed}%")
 
-    def getActualPosition(self) -> list:
-        """ Restituisce le coordinate attuali del robot """
-        CurPosHandl = self.bcap.robot_getvariable(self.h_rob, "@CURRENT_POSITION", "")
-        pos_iniziale = self.bcap.variable_getvalue(CurPosHandl)
-        return pos_iniziale
+    def getActualPosition(self) -> list[int]:
+        """ Restituisce le coordinate attuali del robot come elementi interi di una lista """
+        pos_iniziale = self.bcap.variable_getvalue(self.CurPosHandl)
+        return list(pos_iniziale)
+
+    def execute(self, command, direction, moltiplicator) -> bool:
+
+        # Controllo preliminare sulla pinza
+        if command == RobotAction.GRAB.name:
+            self.bcap.controller_execute(self.h_rob, "HandChuck", [])
+            return True
+        if command == RobotAction.RELEASE.name:
+            self.bcap.controller_execute(self.h_rob, "HandUnChuck", [])
+            return True
+        if command == RobotAction.ERROR.name:
+            return False
+
+        # Ottengo posizione attuale
+        actualPosition = self.getActualPosition()
+        print(f"Pos attuale: {actualPosition}")
+
+
+        # Ottengo gli indici corrispondenti che ho precedentemente mappato
+        indiceAsse = int(DirectionMap[direction].split(",")[0])
+        verso = int(DirectionMap[direction].split(",")[1])
+
+        # Prendo la posizione target
+        posTarget = list(actualPosition)
+
+        # Calcolo la nuova posizione come
+        # verso = +/- 1
+        # self.baseUnit = unità base di movimentazione
+        # moltiplicator = quanto vogliamo effettivamente spostarci 
+        posTarget[indiceAsse] += float(verso) * float(self.baseUnit) * float(moltiplicator)
+
+        if command == RobotAction.TRANSLATE.name:
+            Pose = [posTarget, "P", "@E"]
+            self.bcap.robot_move(self.h_rob, 1, Pose, "")
+            return True
+        if command == RobotAction.ROTATE.name:
+            Pose = [posTarget, "P", "@E"]
+            self.bcap.robot_move(self.h_rob, 1, Pose, "")
+            return True
+        
+        return False
 
     def esegui_presa(self, target_variable="P1"):
         """
@@ -116,7 +173,13 @@ class DensoController:
 # ESECUZIONE DEL TEST
 # ==========================================
 if __name__ == "__main__":
-    robot = DensoController(ip_address="172.20.10.2") # L'IP della tua VM Windows
+    load_dotenv()
+    ipController = os.getenv("CONTROLLER_ADDRESS")
+
+    if ipController is None:
+        raise Exception("Non è stato possibile caricare ")
+    
+    robot = DensoController(ip_address=ipController) # L'IP della tua VM Windows
     
     try:
         robot.connect()
