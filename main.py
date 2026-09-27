@@ -30,8 +30,14 @@ def provaMovimenti() -> list:
         print(f"\tDirezione : {direzione} -> valore : {direzioni.index(direzione)}")
 
     comando = input().split(" ")
+              
+    if int(comando[0]) == RobotAction.SAVE and len(comando[1]) == 1 and comando[1].isalpha():
+        return [azioni[int(comando[0])], comando[1].upper(), int(comando[2])]
 
-    return [azioni[int(comando[0])], direzioni[int(comando[1])], comando[2]]
+    if int(comando[0]) == RobotAction.ROLLBACK and len(comando[1]) == 1 and comando[1].isalpha():
+        return [azioni[int(comando[0])], comando[1].upper(), int(comando[2])]
+
+    return [azioni[int(comando[0])], direzioni[int(comando[1])], int(comando[2])]
 
 if __name__ == "__main__":
     try:
@@ -108,13 +114,13 @@ if __name__ == "__main__":
 
                 print(f"Tempo totale di esecuzione: {int(endingTime-startingTime)} secondi")
             except ControllerError as e:
-                print(e)
+                print(f"ControllerError : {e}")
                 continue
             except BrainProcessorError as e:
-                print(e)
+                print(f"BrainProcessorError : {e}")
                 continue
             except WaitTimeoutError as e:
-                print(e)
+                print(f"WaitTimeoutError : {e}")
                 continue
     except Exception as e:
         print(e)
@@ -124,9 +130,11 @@ if __name__ == "__main__":
 
 """
 IDEE: 
+    - Gestione delle eccezioni out of range
+
+IMPLEMENTATE:
     - Salva la posizione del robot tramite comando vocale
     - Nuova istruzione ROLLBACK
-    - Gestione delle eccezioni out of range
 """
 
      
