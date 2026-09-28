@@ -138,7 +138,8 @@ Per prevenire collisioni e uscite dallo spazio di lavoro ammesso, il controller 
 │   └── voiceRecognition.py       # Pipeline audio (PyAudio, VAD, faster-whisper)
 ├── run_gui.py                    # Entry point applicativo con GUI
 ├── main.py                       # Entry point CLI (modalita' headless / test)
-├── build.sh                      # Script di compilazione per Windows (PyInstaller)
+├── build.sh                      # Script di compilazione per ambienti Bash / Git Bash
+├── build.bat                     # Script di compilazione nativo Windows (cmd / PowerShell)
 ├── .env.example                  # Template delle variabili di configurazione
 ├── requirements.txt              # Dipendenze Python
 └── LICENSE                       # Licenza MIT del progetto
@@ -175,10 +176,15 @@ Per prevenire collisioni e uscite dallo spazio di lavoro ammesso, il controller 
 
 Per generare un pacchetto autonomo distribuibile su postazioni Windows senza necessita' di installare Python o librerie di sistema:
 
-1. Eseguire lo script `build.sh` (tramite Git Bash o ambiente compatibile):
-   ```bash
-   ./build.sh
-   ```
+1. Eseguire lo script di build:
+   - **Da Windows (Prompt dei comandi / PowerShell o doppio clic):**
+     ```cmd
+     .\build.bat
+     ```
+   - **Da ambiente Unix / Git Bash:**
+     ```bash
+     ./build.sh
+     ```
 
 Lo script esegue automaticamente:
 - Installazione di tutte le dipendenze da `requirements.txt` e di `pyinstaller`.
