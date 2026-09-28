@@ -1,11 +1,18 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
+if getattr(sys, 'frozen', False):
+    base_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+src_dir = os.path.join(base_dir, 'src')
+for path in [base_dir, src_dir]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
 from PySide6.QtWidgets import QApplication
-from src.gui.main_window import MainWindow
-
-import os
+from gui.main_window import MainWindow
 from dotenv import load_dotenv
 
 def main():

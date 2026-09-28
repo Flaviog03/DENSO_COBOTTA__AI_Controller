@@ -25,6 +25,7 @@ pyinstaller --noconfirm \
     --name "DENSO_Controller" \
     --onefile \
     --windowed \
+    --paths src \
     --add-data "src/schemas/*.json;src/schemas" \
     --collect-all faster_whisper \
     --collect-all ctranslate2 \

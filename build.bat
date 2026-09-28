@@ -17,7 +17,9 @@ echo.
 echo Installazione e verifica delle dipendenze...
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+if errorlevel 1 goto :pip_error
 python -m pip install pyinstaller
+if errorlevel 1 goto :pip_error
 
 REM 3. Pulizia build precedenti
 echo.
@@ -32,6 +34,7 @@ pyinstaller --noconfirm ^
     --name "DENSO_Controller" ^
     --onefile ^
     --windowed ^
+    --paths src ^
     --add-data "src/schemas/*.json;src/schemas" ^
     --collect-all faster_whisper ^
     --collect-all ctranslate2 ^
@@ -64,3 +67,11 @@ echo [ERRORE] La compilazione con PyInstaller e' fallita.
 echo.
 pause
 exit /b 1
+
+:pip_error
+echo.
+echo [ERRORE] L'installazione delle dipendenze con pip e' fallita.
+echo.
+pause
+exit /b 1
+
