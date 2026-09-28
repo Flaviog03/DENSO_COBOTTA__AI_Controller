@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
 echo ===========================================
 echo   Avvio processo di build per Windows
@@ -7,17 +7,10 @@ echo ===========================================
 
 REM 1. Verifica presenza di Python
 python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo.
-    echo [ERRORE] Python non e' installato o non e' presente nel PATH di sistema.
-    echo Assicurati di installare Python (versione 3.10 o 3.11 consigliata)
-    echo ricordandoti di spuntare "Add Python to PATH" durante l'installazione.
-    echo.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto :no_python
 
-for /f "tokens=*" %%i in ('python --version') do echo [OK] Rilevato: %%i
+echo [OK] Python trovato nel sistema:
+python --version
 
 REM 2. Installazione dipendenze
 echo.
@@ -34,7 +27,7 @@ if exist dist rmdir /s /q dist
 
 REM 4. Generazione eseguibile standalone
 echo.
-echo Creazione dell'eseguibile unico in corso (questa operazione puo' richiedere alcuni minuti)...
+echo Creazione dell'eseguibile unico in corso...
 pyinstaller --noconfirm ^
     --name "DENSO_Controller" ^
     --onefile ^
@@ -44,12 +37,7 @@ pyinstaller --noconfirm ^
     --collect-all ctranslate2 ^
     run_gui.py
 
-if %errorlevel% neq 0 (
-    echo.
-    echo [ERRORE] La compilazione con PyInstaller e' fallita.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto :build_error
 
 echo.
 echo =====================================================================
@@ -60,3 +48,19 @@ echo  Ricordati di copiare il file .env.example (rinominato in .env)
 echo  accanto al file .exe prima di avviarlo.
 echo =====================================================================
 pause
+exit /b 0
+
+:no_python
+echo.
+echo [ERRORE] Python non e' raggiungibile da terminale.
+echo Assicurati che Python sia installato e presente nel PATH.
+echo.
+pause
+exit /b 1
+
+:build_error
+echo.
+echo [ERRORE] La compilazione con PyInstaller e' fallita.
+echo.
+pause
+exit /b 1
