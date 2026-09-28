@@ -140,7 +140,8 @@ Per prevenire collisioni e uscite dallo spazio di lavoro ammesso, il controller 
 ├── main.py                       # Entry point CLI (modalita' headless / test)
 ├── build.sh                      # Script di compilazione per Windows (PyInstaller)
 ├── .env.example                  # Template delle variabili di configurazione
-└── requirements.txt              # Dipendenze Python
+├── requirements.txt              # Dipendenze Python
+└── LICENSE                       # Licenza MIT del progetto
 ```
 
 ---
@@ -191,3 +192,11 @@ Copiare su qualsiasi PC Windows:
 2. Il file `.env` configurato per la rete di laboratorio.
 
 Al primo avvio, il modulo vocale scarichera' automaticamente i pesi del modello Whisper nella cache locale utente (`%USERPROFILE%\.cache\huggingface\hub\`); tutti i successivi avvii opereranno al 100% offline.
+
+---
+
+## Licenza
+
+Questo progetto e' rilasciato sotto licenza MIT. Per maggiori dettagli, consultare il file [LICENSE](LICENSE).
+
+Il driver b-CAP (`src/pybcapclient/`) e' copyright (c) 2017 DENSO WAVE INCORPORATED e rilasciato anch'esso sotto licenza MIT.
