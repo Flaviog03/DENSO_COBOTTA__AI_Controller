@@ -1,8 +1,10 @@
 import json
+import os
 
 def getSchema(schema_name:str )-> dict:
     """Carica uno schema JSON da un file dalla cartella ./schemas | !!! Inserire il nome dello schema senza l'estensione .json"""
-    path = f"schemas/{schema_name}.json"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base_dir, '..', 'schemas', f"{schema_name}.json")
     with open(path, 'r') as f:
         return json.load(f)
 

@@ -1,8 +1,12 @@
-from voiceRecognition import VoiceProcessor
-from densoController import RobotAction, DirectionMap
-from pybcapclient.bcapclient import BCAPClient
-from densoController import DensoController, ControllerError
-from brainProcessor import BrainProcessor, BrainProcessorError
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
+from src.voiceRecognition import VoiceProcessor
+from src.densoController import RobotAction, DirectionMap
+from src.pybcapclient.bcapclient import BCAPClient
+from src.densoController import DensoController, ControllerError
+from src.brainProcessor import BrainProcessor, BrainProcessorError
 from speech_recognition.exceptions import WaitTimeoutError
 from dotenv import load_dotenv
 import time
@@ -15,8 +19,8 @@ ROBOT_PORT = 5007
 TIMEOUT_MS = 2000
 SPEED_LIMIT = 40
 BASE_UNIT = 50          # Dimensione dell'unità base in mm
-MOCK_EAR = True
-MOCK_AI = True
+MOCK_EAR = False
+MOCK_AI = False
 MOCK_CONTROLLER = False
 
 def provaMovimenti() -> list:

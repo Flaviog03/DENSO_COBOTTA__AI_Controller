@@ -12,7 +12,7 @@ class BrainProcessorError(Exception):
             super().__init__(self.message)
 
 class BrainProcessor:
-    def __init__(self, actions, directions, responseSchemaName):
+    def __init__(self, actions:list[str], directions:list[str], responseSchemaName):
         # L'inizializzazione legge automaticamente le variabili d'ambiente
         try:
             self.ai = AITransformer()
@@ -22,6 +22,11 @@ class BrainProcessor:
             
         # Carichiamo lo schema strutturato dalla cartella schemas/
         self.schema = ai_utilities.getSchema(responseSchemaName)
+
+        letter = ord("A")
+        while letter != ord("Z")+1:
+            directions.append(chr(letter))
+            letter += 1
 
         # Inietto le azioni e le direzioni nello schema
         self.schema["properties"]["comando"]["enum"] = actions
@@ -175,7 +180,7 @@ class BrainProcessor:
 if __name__ == "__main__":
     load_dotenv()
     cervello = BrainProcessor(actions=RobotAction.get_allowed_actions(), directions=DirectionMap.get_allowed_directions(), responseSchemaName="responseFormat")
-    risultato = cervello.process_command("ruota il braccio a destra di 3/4 di unità")
+    risultato = cervello.process_command("Vai avanti")
 
     for key, value in risultato.items():
         print(f"Key: {key}\nValue: {value}")

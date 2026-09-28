@@ -7,7 +7,8 @@
     },
     "direzione": {
       "type": "string",
-      "enum": ""
+      "enum": "",
+      "description": "Indica la direzione in cui il braccio deve muoversi. Può appartenere ad una di quelle specificate nell'enum oppure può essere una LETTERA MAIUSCOLA dell'alfabeto"
     },
     "moltiplicatore": {
        "type": "number",

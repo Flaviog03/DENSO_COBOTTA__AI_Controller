@@ -219,6 +219,10 @@ class DensoController:
                 return True
             if command == RobotAction.ERROR.name:
                 raise ControllerError(f"È stato generato un errore!")
+                
+            if command == RobotAction.EXIT.name:
+                # Per sicurezza, l'esecuzione di EXIT sul controller non deve fare nulla
+                return True
 
             # Ottengo posizione attuale
             actualPosition = self.getActualPosition()

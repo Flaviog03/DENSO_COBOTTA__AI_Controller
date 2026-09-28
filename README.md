@@ -57,3 +57,16 @@ Poiché la creazione di questi oggetti assegna delle risorse nella memoria hardw
 X = [132, 338]
 Y = 
 Z = [-10 , 365]
+
+### WARNING
+    Il socket di pybcapclient NON è thread-safe.
+    Se un thread interroga ciclicamente controller.getActualPosition() mentre un altro thread sta eseguendo robot_move(), il socket b-CAP si corrompe o genera un ORiNException.
+    Per questo motivo, tutte le interazioni con DensoController (lettura coordinate, movimento, grab, rilascio) devono risiedere nello stesso singolo thread (RobotWorker), serializzate tramite la coda degli eventi di Qt.
+
+### PATTERN PROPOSTO : QObject + moveToThread()
+[ Thread Principale / GUI ]               [ Thread Secondario ]
+      MainWindow                              Worker (QObject)
+           |                                         |
+           | ----- segnaleInizia(dati) ------------> | (esegue nello slot)
+           |                                         |
+           | <---- segnaleFatto(risultato) --------- |
