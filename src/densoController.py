@@ -162,6 +162,25 @@ class DensoController:
         )
         return self.safetyBounds
 
+    def setSafetyBoundsFromPositions(self, pos1: list[float], pos2: list[float]) -> dict[str, float]:
+        """Imposta il perimetro di sicurezza partendo da due coordinate assolute."""
+        x1, y1 = pos1[0], pos1[1]
+        x2, y2 = pos2[0], pos2[1]
+        
+        # Quota fissa di sicurezza in mm
+        z_safe_min = 20.0
+        z_safe_max = 500.0
+        
+        self.safetyBounds = {
+            "x_min": float(min(x1, x2)), "x_max": float(max(x1, x2)),
+            "y_min": float(min(y1, y2)), "y_max": float(max(y1, y2)),
+            "z_min": z_safe_min, "z_max": z_safe_max
+        }
+        return self.safetyBounds
+
+    def clearSafetyBounds(self):
+        self.safetyBounds = None
+
     def isInRange(self, pos_target: list) -> bool:
         """Verifica se la posizione target rispetta i quadratini limite."""
         if not self.safetyBounds:

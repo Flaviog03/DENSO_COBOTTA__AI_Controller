@@ -48,6 +48,29 @@ class RobotWorker(QObject):
         except Exception as e:
             self.erroreRobot.emit(f"Errore in disconnessione: {str(e)}")
 
+    @Slot()
+    def rimuoviLimiti(self):
+        try:
+            if not self.mock and self.controller:
+                self.controller.clearSafetyBounds()
+                self.movimentoCompletato.emit(True, "Limiti di sicurezza rimossi. Il robot è di nuovo libero.")
+        except Exception as e:
+            self.erroreRobot.emit(f"Errore rimozione limiti: {str(e)}")
+
+    @Slot(str, str)
+    def impostaLimiti(self, pos1_name: str, pos2_name: str):
+        try:
+            if not self.mock and self.controller:
+                pos1 = self.controller.savedPositions.get(pos1_name)
+                pos2 = self.controller.savedPositions.get(pos2_name)
+                if pos1 and pos2:
+                    bounds = self.controller.setSafetyBoundsFromPositions(pos1, pos2)
+                    self.movimentoCompletato.emit(True, f"Limiti di sicurezza impostati: {bounds}")
+                else:
+                    self.erroreRobot.emit("Una o entrambe le posizioni non sono presenti in memoria.")
+        except Exception as e:
+            self.erroreRobot.emit(f"Errore impostazione limiti: {str(e)}")
+
     @Slot(str, str, float)
     def eseguiComando(self, comando: str, direzione: str, moltiplicatore: float):
         self.movimentoIniziato.emit()

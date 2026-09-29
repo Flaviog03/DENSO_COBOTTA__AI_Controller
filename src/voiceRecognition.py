@@ -19,6 +19,16 @@ class VoiceProcessor:
             print("Calibrazione rumore di fondo (1s)...")
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
 
+        # Warmup del modello: esegue una trascrizione fittizia silenziosa
+        # per forzare il caricamento immediato in memoria ed evitare il "cold start"
+        print("Warmup del modello vocale (eliminazione cold-start)...")
+        try:
+            import numpy as np
+            dummy_audio = np.zeros(16000, dtype=np.float32) # 1 sec di silenzio
+            list(self.model.transcribe(dummy_audio, language="it", beam_size=1))
+        except Exception as e:
+            print(f"Warmup fallito (ignorabile): {e}")
+
     def listen_and_transcribe(self):
         with sr.Microphone() as source:
             print("In ascolto! Parla entro 3 secondi...")
