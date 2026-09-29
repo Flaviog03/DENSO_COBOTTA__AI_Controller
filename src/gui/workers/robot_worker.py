@@ -10,6 +10,8 @@ class RobotWorker(QObject):
     movimentoCompletato = Signal(bool, str)
     erroreRobot = Signal(str)
 
+    memoriaAggiornata = Signal(dict)
+
     def __init__(self, controller_class, ip_address, port, timeout, base_unit, mock=False):
         super().__init__()
         self.controller_class = controller_class
@@ -40,7 +42,6 @@ class RobotWorker(QObject):
     def disconnetti(self):
         try:
             if self.controller and not self.mock:
-                # Se c'è una logica di disconnessione (es. stop motori, distruzione handle) andrebbe qui
                 pass
             self.controller = None
             self.disconnesso.emit()
@@ -54,6 +55,8 @@ class RobotWorker(QObject):
             if not self.mock:
                 successo = self.controller.execute(comando, direzione, moltiplicatore)
                 if successo:
+                    if comando == "SAVE" or comando == "ROLLBACK":
+                        self.memoriaAggiornata.emit(self.controller.savedPositions)
                     self.movimentoCompletato.emit(True, f"Comando {comando} completato.")
                 else:
                     self.movimentoCompletato.emit(False, f"Comando {comando} fallito senza eccezioni.")

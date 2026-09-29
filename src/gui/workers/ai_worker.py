@@ -46,5 +46,5 @@ class AIWorker(QObject):
                     "moltiplicatore": 3
                 })
         except Exception as e:
-            err_msg = f"Errore AI: {str(e)}\n{traceback.format_exc()}"
+            err_msg = f"Errore AI: {str(e)}"
             self.erroreAI.emit(err_msg)

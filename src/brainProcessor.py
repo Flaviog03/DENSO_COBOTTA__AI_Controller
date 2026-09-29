@@ -1,5 +1,6 @@
 import os
 import json
+import requests
 from AI.ai_transformer import AITransformer, AITransformerError
 from AI import ai_utilities
 from dotenv import load_dotenv
@@ -166,6 +167,8 @@ class BrainProcessor:
             
             # Poiché LM Studio restituisce un JSON in formato OpenAI-compatibile,
             # il contenuto vero e proprio si trova dentro la lista 'choices'
+            if 'choices' not in risposta:
+                raise BrainProcessorError(f"Formato risposta non valido. Risposta del server: {json.dumps(risposta)}")
             raw_content = risposta['choices'][0]['message']['content']
             
             # Il contenuto è una stringa in formato JSON, va convertito in dizionario Python
@@ -173,9 +176,13 @@ class BrainProcessor:
             return json_data
         
         except AITransformerError as e:
-            raise BrainProcessorError(f"Errore di connessione o URL mancante: {e}")
-        except (KeyError, json.JSONDecodeError) as e:
-            raise BrainProcessorError(f"Errore nella decodifica della risposta di LM Studio: {e}")
+            raise BrainProcessorError(f"Errore di configurazione URL: {e}")
+        except requests.exceptions.RequestException as e:
+            raise BrainProcessorError(f"Impossibile raggiungere il server AI. Verifica che LM Studio sia in ascolto su {self.ai.llm_url} (es. 0.0.0.0 e non 127.0.0.1) e che il firewall consenta la connessione. Dettaglio: {e}")
+        except json.JSONDecodeError as e:
+            raise BrainProcessorError(f"L'AI non ha restituito un JSON valido. Errore: {e}")
+        except Exception as e:
+            raise BrainProcessorError(f"Errore inaspettato durante l'elaborazione AI: {e}")
 
 if __name__ == "__main__":
     load_dotenv()

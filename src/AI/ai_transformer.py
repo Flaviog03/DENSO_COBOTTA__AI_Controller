@@ -25,6 +25,6 @@ class AITransformer:
         if self.llm_url is None:
             raise AITransformerError("Nessun url impostato per l'oggetto locale")
 
-        risposta = requests.post(self.llm_url, json=payload)
+        risposta = requests.post(self.llm_url, json=payload, timeout=(3.0, 60.0))
         risposta.raise_for_status()
         return risposta.json()

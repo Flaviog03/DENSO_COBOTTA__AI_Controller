@@ -46,13 +46,16 @@ class RobotAction(IntEnum):
         return [action.name for action in cls]
 
 class DensoController:
-    def __init__(self, ip_address="192.168.0.1", port=5007, timeout=2000, baseUnit=50):
+    def __init__(self, ip_address="192.168.0.1", port=5007, timeout=2, baseUnit=50):
         self.ip = ip_address
         self.port = port
         self.baseUnit = baseUnit
         self.lastPosition = []
         self.savedPositions : dict[str, list[float]] = {}
         self.safetyBounds = None
+        self.h_ctrl = None
+        self.h_rob = None
+        self.CurPosHandl = None
 
         # Inizializza il client: l'apertura del socket avviene automaticamente qui (timeout 2000 ms)
         self.bcap = BCAPClient(self.ip, self.port, timeout) 
@@ -279,8 +282,9 @@ class DensoController:
 
     def disconnect(self):
         # --- Spegnimento motori ---
-        self.bcap.robot_execute(self.h_rob, "Motor", [0, 0])
-        print("Motori OFF")
+        if self.h_rob:
+            self.bcap.robot_execute(self.h_rob, "Motor", [0, 0])
+            print("Motori OFF")
 
         if self.CurPosHandl:
             self.bcap.variable_release(self.CurPosHandl)

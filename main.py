@@ -2,24 +2,23 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
-from src.voiceRecognition import VoiceProcessor
-from src.densoController import RobotAction, DirectionMap
-from src.pybcapclient.bcapclient import BCAPClient
-from src.densoController import DensoController, ControllerError
-from src.brainProcessor import BrainProcessor, BrainProcessorError
+from voiceRecognition import VoiceProcessor
+from densoController import RobotAction, DirectionMap
+from pybcapclient.bcapclient import BCAPClient
+from densoController import DensoController, ControllerError
+from brainProcessor import BrainProcessor, BrainProcessorError
 from speech_recognition.exceptions import WaitTimeoutError
 from dotenv import load_dotenv
 import time
-import os
 
 # Imposta l'IP del COBOTTA reale (di fabbrica è 192.168.0.1)
 # Se stai testando su WINCAPS III, usa "172.20.10.2" o "127.0.0.1"[cite: 2, 4]
 ### PARAMETERS
 ROBOT_PORT = 5007
-TIMEOUT_MS = 2000
+TIMEOUT_S = 2
 SPEED_LIMIT = 40
 BASE_UNIT = 50          # Dimensione dell'unità base in mm
-MOCK_EAR = False
+MOCK_EAR = True
 MOCK_AI = False
 MOCK_CONTROLLER = False
 
@@ -54,7 +53,8 @@ if __name__ == "__main__":
             raise ControllerError("Non è stato possibile trovare l'ip del robot")
 
         # 1.1 Connessione al controller
-        controller = DensoController(ip_address=ROBOT_IP, port=ROBOT_PORT, timeout=TIMEOUT_MS)
+        print(f"Tentativo di connessione a {ROBOT_IP}:{ROBOT_PORT}...")
+        controller = DensoController(ip_address=ROBOT_IP, port=ROBOT_PORT, timeout=TIMEOUT_S)
         controller.connect()
         comandoUtente = ""
 
@@ -127,21 +127,7 @@ if __name__ == "__main__":
                 print(f"WaitTimeoutError : {e}")
                 continue
     except Exception as e:
-        print(e)
+        print(f"Errore critico: {e}")
     finally:
-        controller.disconnect()
-
-
-"""
-IDEE: 
-    - Gestione delle eccezioni out of range
-
-IMPLEMENTATE:
-    - Salva la posizione del robot tramite comando vocale
-    - Nuova istruzione ROLLBACK
-"""
-
-     
-
-
-
+        if 'controller' in locals():
+            controller.disconnect()
