@@ -245,10 +245,16 @@ Per consentire la comunicazione b-CAP diretta tra il PC operatore e il robot:
 
 Per generare un pacchetto autonomo distribuibile su postazioni Windows senza necessita' di installare Python o librerie di sistema:
 
+> **Nota di Compatibilità (Python 3.11):** La compilazione su Windows richiede **Python 3.11** (es. 3.11.9). Versioni più recenti (come Python 3.12 o 3.13+) non dispongono di ruote binarie precompilate per il pacchetto `av` (libreria multimediale usata da `faster-whisper`), causando errori di compilazione con C/FFmpeg. Gli script `build.bat` e `build.ps1` cercano e utilizzano automaticamente l'interprete Python 3.11 installato nel sistema (`py -3.11`).
+
 1. Eseguire lo script di build:
-   - **Da Windows (Prompt dei comandi / PowerShell o doppio clic):**
+   - **Da Windows (Prompt dei comandi o doppio clic):**
      ```cmd
      .\build.bat
+     ```
+   - **Da Windows (PowerShell):**
+     ```powershell
+     .\build.ps1
      ```
    - **Da ambiente Unix / Git Bash:**
      ```bash
