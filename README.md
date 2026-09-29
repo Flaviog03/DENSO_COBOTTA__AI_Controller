@@ -15,11 +15,12 @@ L'applicazione adotta un'architettura modulare a thread separati per disaccoppia
        | segnali | segnali
        v         |
 +-------------------------------------------------------+
-| Thread Secondari (QObject + moveToThread)             |
+| Thread Secondari (QObject + moveToThread / QThread)   |
 |                                                       |
 |  * VoiceWorker  --> faster-whisper (VAD + int8)       |
 |  * AIWorker     --> REST API / LM Studio (Structured) |
 |  * RobotWorker  --> DensoController (b-CAP / ORiN)    |
+|  * ChatWorker   --> Assistente AI / Supporto Manuale  |
 +-------------------------------------------------------+
 ```
 
@@ -107,13 +108,52 @@ La cinematica si basa su incrementi discreti definiti da un'unita' base (50 mm).
 
 ---
 
-## Limiti Operativi e Spazio di Lavoro
+## Limiti Operativi e Spazio di Lavoro (Safety Bounds)
 
-Per prevenire collisioni e uscite dallo spazio di lavoro ammesso, il controller applica una validazione preliminare sulle coordinate calcolate rispetto ai limiti del banco (configurabili tramite `setSafetyBounds`):
+Per prevenire collisioni e uscite dallo spazio di lavoro ammesso, il controller applica una validazione preliminare (`isInRange`) su tutte le coordinate calcolate rispetto ai limiti del banco:
 
-- **X Cartesiano:** `[132 mm, 338 mm]`
-- **Z Cartesiano:** `[-10 mm, 365 mm]`
-- Tolleranza di soglia: 2.0 mm
+- **Unità Base di Movimentazione:** 50 mm per singolo passo (1 unità = 50 mm).
+- **Gabbia Virtuale (Safety Bounds):**
+  - Definibile interattivamente o partendo da due posizioni salvate nella GUI (`setSafetyBoundsFromPositions`).
+  - **Quota Z di Sicurezza:** Quando la gabbia è attiva, la quota Z minima è forzata a `20.0 mm` dal piano per impedire urti sul banco di lavoro, con una quota massima di `500.0 mm`.
+  - Tolleranza di soglia: 2.0 mm per assorbire approssimazioni di cinematica inversa.
+
+---
+
+## Interfaccia Grafica (GUI)
+
+L'interfaccia utente (PySide6) è organizzata in 5 schede operative pensate per l'operatore:
+
+1. **Controllo Principale:**
+   - Gestione connessione al braccio (pulsanti *Connetti* / *Disconnetti* con indicatore di stato).
+   - Acquisizione comandi vocali con spia di stato (LED rosso di ascolto attivo).
+   - Area di anteprima con trascrizione del testo e comando AI strutturato, con opzione di conferma ed esecuzione manuale (*Conferma ed Esegui* / *Annulla*).
+   - Pannello di log operativi e log dettagliati dei movimenti cartesiani.
+2. **Configurazione:**
+   - Impostazione parametri di rete: *Indirizzo IP Controller*, *IP Server AI* e *Modello LLM*, con salvataggio persistente.
+   - Opzione **Invio Automatico Comandi**: scavalca la conferma visiva ed esegue immediatamente il comando vocale validato.
+   - Pannello **Simulazione (Mock)**: permette di simulare indipendentemente il Robot, la Voce (con comandi manuali testuali e D-Pad direzionale) e l'AI.
+3. **Memoria Posizioni:**
+   - Visualizzazione dei punti salvati in memoria (`SAVE`).
+   - Selezione di due posizioni per generare e attivare la *Gabbia di Sicurezza* operativa.
+4. **Manuale:**
+   - Manuale d'uso rapido e discorsivo integrato direttamente nell'interfaccia grafica.
+5. **Aiuto (Chat AI):**
+   - Assistente di supporto tecnico basato su LLM (`ChatWorker`). Utilizza il testo del manuale integrato per rispondere a domande operative e guidare l'utente nella risoluzione degli errori.
+
+---
+
+## Diagnostica e Risoluzione Errori (ORiN)
+
+Il modulo `orinErrorDecoder.py` intercetta e decodifica i codici di errore HResult generati dal protocollo b-CAP. I codici più comuni e le relative azioni correttive sono:
+
+| Codice Decimale | Esadecimale | Causa Tipica | Soluzione Operativa |
+| :--- | :--- | :--- | :--- |
+| **`-2095049471`** | `0x83201401` | *Out of Bounds*: posizione richiesta fuori dal raggio o dai limiti dei giunti | Ridurre l'ampiezza dello spostamento o allontanarsi dal limite operativo |
+| **`-2125459419`** | `0x81501025` | *Controller Bloccato*: errore pregresso non resettato | Eseguire `ClearError` da Teach Pendant o simulatore prima di `TakeArm` |
+| **`-2147024891`** | `0x80070005` | *Accesso Negato (`E_ACCESSDENIED`)*: controller non autorizzato | Impostare il selettore del Teach Pendant su **AUTO** ed Exec. Provider su **Ethernet** |
+| **`-2147481344`** | `0x80000000` | *Timeout (`E_TIMEOUT`)*: nessuna risposta via b-CAP | Verificare il cavo Ethernet, l'IP del PC (`192.168.0.100`), disconnettere e riconnettere |
+| **`-2147024809`** | `0x80070057` | *Argomento Non Valido (`E_INVALIDARG`)* | Verificare parametri del comando o consistenza degli handle |
 
 ---
 
@@ -149,25 +189,54 @@ Per prevenire collisioni e uscite dallo spazio di lavoro ammesso, il controller 
 
 ## Configurazione dell'Ambiente
 
+### 1. Configurazione Rete Ethernet (PC <-> DENSO COBOTTA)
+Per consentire la comunicazione b-CAP diretta tra il PC operatore e il robot:
+- **Collegamento Fisico:** Connettere la porta Ethernet del controller COBOTTA alla scheda di rete del PC tramite cavo RJ45.
+- **IP Controller DENSO:** Di fabbrica è impostato a `192.168.0.1`.
+- **Configurazione Scheda di Rete PC (IPv4 Statico):**
+  - **Indirizzo IP:** `192.168.0.100`
+  - **Subnet Mask:** `255.255.255.0`
+  - **Gateway / DNS:** Lasciare non configurati (vuoti).
+
+### 2. Setup Server AI Locale (LM Studio)
+1. Scaricare e installare LM Studio dal sito ufficiale: [https://lmstudio.ai/](https://lmstudio.ai/).
+2. Nella barra di ricerca modelli, individuare e scaricare un modello della famiglia **Nemotron** (consigliato: `nemotron-3-nano-4b`).
+3. Accedere alla scheda **Developer / Local Server** (icona terminale/doppie frecce):
+   - Selezionare in alto il modello Nemotron scaricato per caricarlo in memoria.
+   - Avviare il server cliccando su **Start Server** sulla porta predefinita `1234` (endpoint base: `http://localhost:1234/v1`).
+
+### 3. Installazione e Avvio Applicazione
 1. Clonare il repository:
    ```bash
    git clone <URL_REPOSITORY>
    cd DENSO_controller
    ```
 
-2. Creare il file di configurazione locale partendo dal template:
+2. Creare il virtual environment e installare le dipendenze:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Su Windows: .\venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. Creare il file di configurazione `.env` partendo dal template:
    ```bash
    cp .env.example .env
    ```
 
-3. Modificare `.env` con i parametri operativi della propria postazione:
+4. Configurare i parametri in `.env`:
    ```ini
    # Indirizzo IP del controller reale o del simulatore WINCAPS III
    CONTROLLER_ADDRESS=192.168.0.1
 
    # Endpoint del server LLM locale (LM Studio)
    LLM_URL=http://localhost:1234/v1/chat/completions
-   LLM_MODEL=meta-llama-3-8b-instruct
+   LLM_MODEL=nemotron-3-nano-4b
+   ```
+
+5. Avviare l'interfaccia grafica:
+   ```bash
+   python run_gui.py
    ```
 
 ---
