@@ -67,6 +67,7 @@ $buildArgs = @(
     "--windowed",
     "--paths", "src",
     "--add-data", "src/schemas/*.json;src/schemas",
+    "--add-data", "src/schemas/*.json;schemas",
     "--collect-all", "faster_whisper",
     "--collect-all", "ctranslate2",
     "run_gui.py"
